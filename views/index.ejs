@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+
+    <div class="content">
+        <div class="header">
+            <div class="buttons">
+                <div class="item_button"><button id="open_browser">Начать парсинг</button></div>
+                <div class="item_button"><button id="parsing_stop" disabled>Остановить парсинг</button></div>
+            </div>
+            <div class="status">
+                <p>Парсинг не начат</p>
+            </div>
+        </div>
+        <div class="content">
+            <table style="display: none;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Команды</th>
+                        <th>П1</th>
+                        <th>Х</th>
+                        <th>П2</th>
+                        <th>Итоговый кэф</th>
+                        <th>Результат</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/main.js"></script>
+</body>
+</html>
