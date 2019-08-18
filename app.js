@@ -1,6 +1,8 @@
 var express = require('express');
 var path = require('path');
 
+const config = require('./config');
+
 var bodyParser = require('body-parser')
 
 var app = express();
@@ -20,7 +22,6 @@ const {Builder, By, Key, until} = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 
 var status_parsing = true;
-
 
 io.on('connection', socket => {
   console.log('Пользователь подключился');
@@ -154,6 +155,6 @@ io.on('connection', socket => {
   })
 });
 
-http.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
-});
+http.listen(config.PORT, () =>
+  console.log(`Example app listening on port ${config.PORT}!`)
+);
