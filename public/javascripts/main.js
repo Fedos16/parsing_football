@@ -53,6 +53,7 @@ $(document).ready(() => {
         if (msg == 'Парсинг завершен') {
             $('#open_browser').removeAttr('disabled');
             $('#open_browser').text('Начать парсинг');
+            $('#parsing_stop').attr('disabled', 'disabled');
         }
     });
 
@@ -60,20 +61,42 @@ $(document).ready(() => {
         let arr = JSON.parse(data);
         if (data.length > 0) {
             $('.content table').show();
-            let col = $('.content table tbody tr').length + 1;
+            let col = $('.content table tbody tr.data_row').length + 1;
             $('.content table tbody').append(`
-                <tr>
+                <tr class="data_row">
                     <td>${col}</td>
                     <td>${arr[0]}</td>
                     <td>${arr[1]}</td>
                     <td>${arr[2]}</td>
                     <td>${arr[3]}</td>
                     <td>${arr[4]}</td>
-                    <td>${arr[5]}</td>
+                    <td>${Number(arr[3].replace(',', '.'))*500}</td>
                 </tr>
             `);
         }
     });
+    socket.on('parsing new season', msg => {
+        if (msg == 'НОВЫЙ СЕЗОН') {
+            $('.content table tbody').append(`
+                <tr>
+                    <td colspan="7" style="text-align: center; background-color: lightgray;">${msg}</td>
+                </tr>
+            `);
+        } else {
+            let summ = 0
+            let tr = $('.content table tbody tr.data_row');
+            for (let i=0; i < tr.length; i++) {
+                summ += Number($($(tr[i]).find('td')[6]).text());
+            }
+            let sumAllMatch = Number(msg)*500;
+            $('.content table tbody').append(`
+                <tr>
+                    <td colspan="7" style="text-align: center; background-color: lightgray;">Всего матчей: <b>${msg}</b>, поставили на них: <b>${sumAllMatch}</b>. Прибыль составила: <b>${summ-sumAllMatch}</b></td>
+                </tr>
+            `);
+        }
+        
+    })
 
     $(document).delegate('#parsing_stop', 'click', (e) => {
         socket.emit('parsing stop');

@@ -37,7 +37,7 @@ io.on('connection', socket => {
 
       let driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
       try {
-          await driver.get('https://legalbet.ru/match-center/tournaments/liga-1/');
+          await driver.get('https://legalbet.ru/match-center/tournaments/england-premer-liga/');
           io.emit('parsing status', 'Открыли браузер')
           let elements = await driver.findElements(By.className('link tab-title lazy'));
           elements[1].click();
@@ -46,17 +46,21 @@ io.on('connection', socket => {
           //*[@id="archive-seasons"]/div/div[2]/div[1]
           //*[@id="archive-seasons"]/div/div[2]/div[1]
           //*[@id="archive-seasons"]/div/div[2]/div[2]/div[2]
+          //*[@id="archive"]/div[1]/div/div[2]
 
           await driver.sleep(2000);
 
-          await driver.findElement(By.xpath('//*[@id="archive-seasons"]/div/div[2]/div[1]')).click();
+          //await driver.findElement(By.xpath('//*[@id="archive-seasons"]/div/div[2]/div[1]')).click();
 
           let select_options = await driver.findElements(By.xpath('//*[@id="archive-seasons"]/div/div[2]/div[2]/div'));
-          let colss = select_options.length;
-          for (let z=2; z < colss+1; z++) {
-            
-            await driver.findElement(By.xpath(`//*[@id="archive-seasons"]/div/div[2]/div[2]/div[${z}]`)).click();
-            let block = await driver.findElements(By.xpath(`//*[@id="archive"]/div[${z}]/div[2]/div`));
+          let colss = 1;//select_options.length;
+          for (let z=1; z < colss+1; z++) {
+            io.emit('parsing new season', 'НОВЫЙ СЕЗОН');
+            let allMath = 0;
+            let block = await driver.findElements(By.xpath(`//*[@id="archive"]/div[${z}]/div/div`));
+            if (z > 1) {
+              block = await driver.findElements(By.xpath(`//*[@id="archive"]/div[${z}]/div[2]/div`));
+            }
 
             io.emit('parsing status', 'Обрабатываем данные');
 
@@ -75,25 +79,40 @@ io.on('connection', socket => {
 
                         let clasP1 = await tr[i].findElement(By.xpath('td[3]')).getAttribute('class');
                         let clasXx = await tr[i].findElement(By.xpath('td[4]')).getAttribute('class');
+                        let clasP2 = await tr[i].findElement(By.xpath('td[5]')).getAttribute('class');
                         let clasTm25 = await tr[i].findElement(By.xpath('td[6]')).getAttribute('class');
 
-                        let item = [];
+                        allMath ++;
+                        
+                        if (String(clasXx).indexOf('green-text') == -1) {
 
-                        item.push(name);
+                          let maxKef = Math.max(Number(p1.replace(',', '.')), Number(p2.replace(',', '.')));
+                          let status = true;
 
-                        item.push(p1);
-                        item.push(xx);
-                        item.push(p2);
+                          let item = [];
 
-                        if (String(clasP1).indexOf('green-text') != -1) {
+                          item.push(name);
                           item.push(p1);
-                          item.push('П1');
-                        } else if (String(clasXx).indexOf('green-text') != -1) {
-                          item.push(xx);
-                          item.push('Х');
-                        } else {
                           item.push(p2);
-                          item.push('П2');
+
+                          if (String(clasP1).indexOf('green-text') != -1) {
+                            item.push(p1);
+                            item.push('П1');
+                            if (Number(p1.replace(',', '.')) != maxKef) {
+                              status = false;
+                            }
+                          } else if (String(clasP2).indexOf('green-text') != -1) {
+                            item.push(p2);
+                            item.push('П2');
+                            if (Number(p2.replace(',', '.')) != maxKef) {
+                              status = false;
+                            }
+                          }
+
+                          if (status) {
+                            io.emit('parsing data', JSON.stringify(item));
+                          }
+
                         }
 
 
@@ -120,15 +139,13 @@ io.on('connection', socket => {
                             item.push(tb25);
                         } */
 
-                        io.emit('parsing data', JSON.stringify(item));
-
                     } catch (e) {
-                        io.emit('parsing status', `Страница ${z-1} из ${colss}. Обработано ${x+1} из ${block.length}`);
+                        io.emit('parsing status', `Страница ${z} из ${colss}. Обработано ${x+1} из ${block.length}`);
                         continue;
                     }
                 }
 
-                io.emit('parsing status', `Страница ${z-1} из ${colss}. Обработано ${x+1} из ${block.length}`);
+                io.emit('parsing status', `Страница ${z} из ${colss}. Обработано ${x+1} из ${block.length}`);
                 
                 if (!status_parsing) {
                   break;
@@ -137,8 +154,10 @@ io.on('connection', socket => {
             if (!status_parsing) {
               break;
             }
+            io.emit('parsing new season', allMath);
             await driver.sleep(2000);
             await driver.findElement(By.xpath('//*[@id="archive-seasons"]/div/div[2]/div[1]')).click();
+            await driver.findElement(By.xpath(`//*[@id="archive-seasons"]/div/div[2]/div[2]/div[${z}]`)).click();
           }
 
           driver.quit();
